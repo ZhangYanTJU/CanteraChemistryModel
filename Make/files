@@ -1,0 +1,5 @@
+chemistryModel/BasicChemistryModels.C
+chemistrySolver/chemistrySolver/makeChemistrySolvers.C
+
+
+LIB = $(FOAM_USER_LIBBIN)/libCanteraChemistryModel
