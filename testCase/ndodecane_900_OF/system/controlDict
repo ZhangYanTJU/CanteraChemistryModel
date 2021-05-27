@@ -1,0 +1,79 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     chemFoam;
+
+startFrom       startTime;
+
+startTime       0;
+stopAt         endTime;
+
+endTime         0.0003;
+
+deltaT          1e-07;
+
+maxDeltaT       1e-03;
+
+adjustTimeStep  off;
+
+writeControl    runTime;
+
+writeInterval   100000;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+DebugSwitches
+{
+    SolverPerformance   0;
+}
+
+libs ("libZYchemistryModel.so");
+
+functions
+{
+    setWriteInterval
+    {
+        type setWriteInterval;
+        libs ("libZYutilityFunctionObjects.so");
+
+
+        writeInterval table // linear interpolation
+        (
+            (0      50)
+            (3.5e-5      5)
+            (4.5e-5      5)
+            (0.0001      50)
+			(0.0001001      10)
+            (0.00012      10)
+            (0.00012001      1)
+            (0.000126      1)
+            (0.00013      10)
+            (0.00013001      100)
+        );
+    }
+}
+// ************************************************************************* //

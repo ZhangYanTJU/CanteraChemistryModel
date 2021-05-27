@@ -45,3 +45,4 @@ platforms/
 *.tgz
 *.gtgz
 
+cantera_build/
