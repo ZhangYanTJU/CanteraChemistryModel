@@ -2,8 +2,14 @@
 
 using Cantera to calculate species reaction rates for OpenFOAM.
 
+
 But! Now the result is wrong!
 ![](./testCase/compare.png)
+
+
+Now I have fixed it! (20210624, midsummer eve)
+![](./testCase/compare-fix.png)
+The problem is the mismatch between concentration calculated by OpenFOAM and by Cantera. 
 
 ## How to compile
 ```

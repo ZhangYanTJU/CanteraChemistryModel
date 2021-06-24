@@ -128,12 +128,11 @@ Foam::scalar Foam::CanteraChemistryModel<ReactionThermo, ThermoType>::solve
         return deltaTMin;
     }
 
-    ////Cantera::Reactor react;
+    Cantera::Reactor react;
     //Cantera::IdealGasReactor react;  // Constant-UV, default, constant Volumn
-    Cantera::IdealGasConstPressureReactor react;  // Constant-HP, constant pressure
+    //Cantera::IdealGasConstPressureReactor react;  // Constant-HP, constant pressure
 
     scalarField c0(this->nSpecie_);
-    scalarField c_ctr(this->nSpecie_);
 
     tmp<volScalarField> trho(this->thermo().rho());
     const scalarField& rho = trho();
@@ -149,63 +148,27 @@ Foam::scalar Foam::CanteraChemistryModel<ReactionThermo, ThermoType>::solve
         try
         {
             scalarList yTemp_(this->nSpecie_);
-
             for (label i=0; i<this->nSpecie_; i++)
             {
-                c0[i] = rhoi*this->Y_[i][cellI]/this->specieThermo_[i].W();
                 yTemp_[i] = this->Y_[i][cellI];
             }
 
-            CanteraMixture_.setState_TPY(Ti,pi,yTemp_.begin());
+            CanteraMixture_.setState_TPY(Ti, pi, yTemp_.begin());
+            CanteraMixture_.getConcentrations(c0.begin());
 
-
-            CanteraMixture_.getConcentrations(c_ctr.begin());
-            if ( mag(max(c_ctr-c0))> 0.1 )
-            {
-                FatalErrorIn("CanteraChemistryModel::solve")
-                    << "Before ODE, c0 in OpenFOAM is not consistent with that in Cantera" << endl
-                    << "in Cantera:" << c_ctr << endl
-                    << "in OpenFOAM:" << c0 << endl
-                    << abort(FatalError);
-            }
 
             react.insert(CanteraMixture_);
+            // useless in single mesh (since volume is 1 m^3 in single mesh and the default value is 1 too in Cantera)
+            // not sure for normal case
+            //react.setInitialVolume(1.0);
+            react.setEnergy(0); // keep T const before and after sim.advance. this will give you a little improvement
             Cantera::ReactorNet sim;
             sim.addReactor(react);
-            sim.setInitialTime(0);
             setNumerics(sim);
 
-            // method-1:
-            //scalar timeLeft = deltaT[cellI];
-            //scalar old = 0;
-            //while(timeLeft > small)
-            //{
-            //    sim.setMaxTimeStep(timeLeft);
-            //    scalar now = sim.step();
-            //    scalar dt = now-old;
-            //    old = now;
-            //    if (old >0) deltaTMin = min(dt, deltaTMin); // discard the first timestep, since it's too small
-            //    //timeLeft = deltaT[cellI]-now; // this is also true
-            //    timeLeft -= dt;
-            //}
 
-
-
-            // method-2:
             sim.advance(deltaT[cellI]);
 
-
-            // method-3:
-            //scalar timeLeft = deltaT[cellI];
-            //scalar old = 0;
-            //while(timeLeft > small)
-            //{
-            //    scalar now = sim.advance(deltaT[cellI], /* applylimit = */ true);
-            //    scalar dt = now-old;
-            //    old = now;
-            //    if (old >0) deltaTMin = min(dt, deltaTMin); // discard the first timestep, since it's too small
-            //    timeLeft -= dt;
-            //}
 
             CanteraMixture_.getConcentrations(this->c_.begin());
             for (label i=0; i<this->nSpecie_; i++)
@@ -226,7 +189,6 @@ Foam::scalar Foam::CanteraChemistryModel<ReactionThermo, ThermoType>::solve
         }
     }
 
-    Info << "deltaTMin-ChemistryModel === " << deltaTMin << endl;
     return deltaTMin;
 }
 
